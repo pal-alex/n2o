@@ -67,7 +67,13 @@ html_events(#pickle{source=Source,pickled=Pickled,args=Linked}, State=#cx{token 
 render_ev(#ev{name=F,msg=P,trigger=T},_Source,Linked,State=#cx{module=M}) ->
     try case F of
          api_event -> M:F(P,Linked,State);
-             event -> [erlang:put(K, nitro:to_binary([V])) || {K,V} <- Linked], M:F(P);
+             event -> [erlang:put(K, nitro:to_binary([V])) || {K,V} <- Linked],
+                    case length(Linked) of
+                        L when L =< 1 -> M:F(P);
+                        _V ->  % the first element is an event, the second is a data
+                              [_E|D] = Linked,
+                              M:F({P, hd(D)})
+                    end;
                  _ -> M:F(P,T,State) end
     catch E:R:S -> ?LOG_EXCEPTION(E,R,S), {stack,S} end.
 

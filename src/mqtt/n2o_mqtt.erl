@@ -5,12 +5,23 @@
 send(C,T,M) ->
     emqtt:publish(C,T,M).
 
+send(C,T,M,Q) ->
+            emqtt:publish(C,T,M,Q).
+
+publish(Topic, Message) -> publish(Topic, Message, 2).
+publish(Topic, Message, Qos) -> 
+            {ok, ConnPid} = emqtt:start_link([{host, localhost}, {port, 1883}]),
+            {ok, _Props} = emqtt:connect(ConnPid),
+            send(ConnPid, Topic, Message, Qos).
+            
+    
+
 xio(Name) ->
-  [ {host,"xio-2.n2o.space"}, %% http://xio-2.n2o.space:18083 — dashboard
-    {port,1883},
-    {force_ping,true},
-    {proto_ver,v5},
-    {client_id,Name} ].
+  [ {host, "localhost"},
+    {port, 1883},
+    {force_ping, true},
+    {proto_ver, v5},
+    {client_id, Name} ].
 
 proc(init,#pi{name=Name}=Async) ->
     {ok, Conn} = emqtt:start_link(xio(Name)),
