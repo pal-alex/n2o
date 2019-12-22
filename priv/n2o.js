@@ -31,20 +31,30 @@ var $io = {}; $io.on = function onio(r, cb) {
            (r.v[2].v[0].v == "Token" || r.v[2].v[0].v == "Auth"))
          { localStorage.setItem("token",utf8_arr(r.v[2].v[1].v)); }
         if (typeof cb == 'function') cb(r.v[2]);
-        try { eval(utf8_arr(r.v[1].v)); return { status: "ok" }; }
-        catch (e) { console.error("Eval failed:",e); return { status: '' }; }
+        try { eval(utf8_arr(r.v[1].v)); return { status: "io ok" }; }
+        catch (e) { console.error("eval(" + utf8_arr(r.v[1].v) + ")  failed:",e); return { status: '' }; }
     } else return { status: '' };
 }
 
 var $file = {}; $file.on = function onfile(r, cb) {
     if (is(r, 10, 'ftpack')) {
-        if (typeof cb == 'function') cb(r); return { status: "ok" };
+        if (typeof cb == 'function') cb(r); return { status: "file ok" };
+    } else return { status: '' };
+}
+
+var $direct = {}; $direct.on = function ondirect(r, cb) {
+    if (is(r, 2, 'direct')) {
+        par = r.v[1].v;
+        if (typeof cb == 'function') cb(r);
+        // mes = (typeof cb == 'function')? cb(par) : par;
+        ws.send(enc(tuple(atom('direct'), tuple(atom('redirect'), string(par) ))));
+        return { status: "direct ok" };
     } else return { status: '' };
 }
 
 // BERT Formatter
 
-var $bert = {}; $bert.protos = [$io, $file]; $bert.on = function onbert(evt, cb) {
+var $bert = {}; $bert.protos = [$io, $file, $direct]; $bert.on = function onbert(evt, cb) {
     if (ArrayBuffer.prototype.isPrototypeOf(evt.data) &&
        (evt.data.byteLength > 0)) {
         try {

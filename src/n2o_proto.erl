@@ -25,7 +25,8 @@ init(State, Cx)   -> {ok, State, Cx}.
 
 fold(Fun,Handlers,Ctx) ->
     lists:foldl(
-        fun ({_,[]},C) -> C;
+        fun 
+            % ({_,[]},C) -> C;
             ({_,Module},Ctx1) ->
              {ok,_,NewCtx} = Module:Fun([],Ctx1), NewCtx
         end, Ctx, Handlers).

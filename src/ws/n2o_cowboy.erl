@@ -42,7 +42,8 @@ port()   -> application:get_env(n2o,port,8000).
 points() -> cowboy_router:compile([{'_', [
             { "/n2o/[...]", cowboy_static,  n2o()      },
             { "/app/[...]", cowboy_static,  static()   },
-            { "/ws/[...]",  n2o_stream,  []            } ]}]).
+            { "/ws/[...]",  n2o_stream,  []            },
+            { "/[...]", cowboy_static,  static()   } ]}]).
 
 env(App) -> [{port,       port()},
              {certfile,   code:priv_dir(App)++"/ssl/fullchain.pem"},

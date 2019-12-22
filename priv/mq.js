@@ -7,7 +7,7 @@ var l = location.pathname,
     x = l.substring(l.lastIndexOf("/") + 1),
     ll = x.lastIndexOf("."),
     module = x == "" ? "index" : (ll > 0 ? x.substring(0, ll) : x);
-var ws = { send: function (payload, qos) {
+var ws_mqtt = { send: function (payload, qos) {
         var message = new Paho.MQTT.Message(payload);
         message.destinationName = topic("events");
         message.qos = qos || 2;
@@ -27,7 +27,7 @@ var options = {
     cleanSession: false,
     onFailure: function (m) { console.log("MQTT Connection failed: " + m.errorMessage); },
     onSuccess: function ()  { console.log("MQTT Connect");
-                              ws.send(enc(tuple(atom('init'),bin(token()))));
+                                ws_mqtt.send(enc(tuple(atom('init'),bin(token()))));
                             } };
 
 function gen_client()  { return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36); }
@@ -42,6 +42,7 @@ function rnd()         { return Math.floor((Math.random() * nodes)+1); }
   mqtt = new Paho.MQTT.Client(host, 8083, client());
   mqtt.onConnectionLost = function (o) { console.log("connection lost: " + o.errorMessage); };
   mqtt.onMessageArrived = function (m) {
+        console.log("message arrived"); 
         var BERT = m.payloadBytes.buffer.slice(m.payloadBytes.byteOffset,
             m.payloadBytes.byteOffset + m.payloadBytes.length);
         try {
