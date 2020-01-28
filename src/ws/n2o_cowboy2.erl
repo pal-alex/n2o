@@ -23,7 +23,7 @@ terminate(M,R,S)             -> ws(n2o_proto:info(#direct{data={exit,M}},R,S)).
 points() -> cowboy_router:compile([{'_', [
 		{"/ws/[...]", n2o_cowboy2, []},
 		% {"/n2o/[...]", cowboy_static, {dir, n2o_cowboy:fix2(code:priv_dir(n2o)), []}},
-	    {"/app/[...]", cowboy_static, {dir, static(), []}},
+	    % {"/app/[...]", cowboy_static, {dir, static(), []}},
 		{"/[...]", cowboy_static, {dir, static(), []}}
 					 ]}]).
 
