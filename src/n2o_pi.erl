@@ -13,6 +13,7 @@ start(#pi{table=Tab,name=Name,module=Module,sup=Sup} = Async) ->
     case supervisor:start_child(Sup,ChildSpec) of
                {ok,Pid} -> {Pid,Async#pi.name};
              {ok,Pid,_} -> {Pid,Async#pi.name};
+         {error,{already_started, Pid}} -> {Pid,Async#pi.name};    
          {error,Reason} -> {error,Reason} end.
 
 stop(Tab,Name) ->

@@ -15,9 +15,33 @@ ws({reply,{default,Rep},_,S})-> {reply,{binary,n2o:encode(Rep)},S};
 ws({reply,{Encoder,Rep},_,S})-> {reply,{binary,Encoder:encode(Rep)},S};
 ws(X) -> ?LOG_ERROR(#{unknown=>X}), {shutdown,[]}.
 
-websocket_init(S)            -> ws(n2o_proto:init([],S,[],ws)).
-websocket_handle(D,S)        -> ws(n2o_proto:stream(D,[],S)).
-websocket_info(D,S)          -> ws(n2o_proto:info(D,[],S)).
+pid(Ctx) when is_tuple(Ctx) -> maps:get(pid, element(4, Ctx)).
+
+websocket_init(S)            -> Res = {ok, Ctx} = ws(n2o_proto:init([],S,[],ws)),
+								case ets:whereis(web_context) of
+									undefined -> ets:new(web_context, [public, named_table]); % key = sid
+									_ -> skip
+								end,
+								Pid = pid(Ctx),
+								ets:insert(web_context, {Pid, Ctx}),
+								Res.
+websocket_handle(D,S)        -> 
+	% io:format("ws_handle: ~p~n state: ~p~n", [D, S]),
+	ws(n2o_proto:stream(D,[],S)).
+
+websocket_info({log, Text}, State) ->
+	% io:format("ws_log_info: ~p~n state: ~p~n", [Text, State]),
+	% io:format("ws_log_info: ~p~n", [Text]),
+	{reply, {text, Text}, State};
+
+websocket_info({binary, Data}, State) ->
+	{reply, {binary, Data}, State};
+	
+websocket_info(D,S)          -> 
+	% io:format("ws_info: ~p~n state: ~p~n", [D, S]),
+	% io:format("ws_info: ~p~n", [D]),
+	ws(n2o_proto:info(D,[],S)).
+
 terminate(M,R,S)             -> ws(n2o_proto:info(#direct{data={exit,M}},R,S)).
 
 points() -> cowboy_router:compile([{'_', [

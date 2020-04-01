@@ -45,7 +45,8 @@ start_ws()       -> lists:map(fun start_ws/1,   n2o_ring:members(ws)).
 start_tcp()      -> lists:map(fun start_tcp/1,  n2o_ring:members(tcp)).
 
 start_mqtt(Node) -> n2o_pi:start(#pi{module=n2o_mqtt,table=mqtt,   sup=n2o,state=[],name=Node}).
-start_ws(Node)   -> n2o_pi:start(#pi{module=n2o_ws,  table=ws,     sup=n2o,state=[],name=Node}).
+start_ws(Node)   -> io:format("start_ws: ~p~n", [Node]),
+                    n2o_pi:start(#pi{module=n2o_ws,  table=ws,     sup=n2o,state=[],name=Node}).
 start_tcp(Node)  -> n2o_pi:start(#pi{module=n2o_tcp, table=tcp,    sup=n2o,state=[],name=Node}).
 start_timer()    -> n2o_pi:start(#pi{module=n2o,     table=caching,sup=n2o,state=[],name="/timer"}).
 
@@ -71,7 +72,6 @@ pickle(Data) -> (pickler()):pickle(Data).
 depickle(SerializedData) -> (pickler()):depickle(SerializedData).
 
 % SESSION
-
 sid() -> #cx{session=SID}=get(context), SID.
 session() -> application:get_env(n2o,session,n2o_session).
 session(Key)        -> #cx{session=SID}=get(context), (session()):get_value(SID, Key, []).
@@ -131,3 +131,4 @@ version() -> proplists:get_value(vsn,
              element(2,application:get_all_key(n2o))).
 
 % END
+

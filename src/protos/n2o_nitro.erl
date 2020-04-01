@@ -1,7 +1,8 @@
 -module(n2o_nitro).
 -description('N2O Nitrogen Web Framework Protocol').
 -include("n2o.hrl").
--export([info/3,render_actions/1,io/1,io/2]).
+-compile(export_all).
+% -export([info/3,render_actions/1,io/1,io/2]).
 
 % Nitrogen pickle handler
 
@@ -9,13 +10,13 @@ info({text,<<"N2O,",Auth/binary>>}, Req, State) ->
     info(#init{token=Auth},Req,State);
 
 info(#init{token=Auth}, Req, State) ->
-    {'Token', Token} = n2o_session:authenticate([], Auth),
-    Sid = case n2o:depickle(Token) of {{S,_},_} -> S; X -> X end,
+    Token0 = token0(Auth),
+    Sid = token(Token0),
     New = State#cx{session = Sid, token = Auth},
     put(context,New),
     {reply,{bert,case io(init, State) of
                       {io,_,{stack,_}} = Io -> Io;
-                      {io,Code,_} -> {io,Code,{'Token',Token}} end},
+                      {io,Code,_} -> {io,Code,{'Token',Token0}} end},
             Req,New};
 
 info(#client{data=Message}, Req, State) ->
@@ -26,6 +27,9 @@ info(#pickle{}=Event, Req, State) ->
     nitro:actions([]),
     {reply,{bert,html_events(Event,State)},Req,State};
 
+info(#flush{data=[]}, Req, State) ->
+    {reply,{bert,io(<<>>)},Req,State};
+    
 info(#flush{data=Actions}, Req, State) ->
     nitro:actions(Actions),
     {reply,{bert,io(<<>>)},Req,State};
@@ -60,6 +64,12 @@ html_events(#pickle{source=Source,pickled=Pickled,args=Linked}, State=#cx{token 
                            {error,"EV expected"} end,
     io(Res).
 
+token0(Auth) -> {'Token', Token0} = n2o_session:authenticate([], Auth), 
+                Token0. 
+token(Token0) -> case n2o:depickle(Token0) of {{S,_},_} -> S; X -> X end.
+sid(Auth) -> Token0 = token0(Auth),
+             token(Token0).
+
 % calling user code in exception-safe manner
 
 -ifdef(OTP_RELEASE).
@@ -80,7 +90,8 @@ render_ev(#ev{name=F,msg=P,trigger=T},_Source,Linked,State=#cx{module=M}) ->
 
 io(Event, #cx{module=Module}) ->
     try X = Module:event(Event), {io,render_actions(nitro:actions()),X}
-    catch E:R:S -> ?LOG_EXCEPTION(E,R,S), {io,[],{stack,S}} end.
+    catch E:R:S -> ?LOG_EXCEPTION(E,R,S), {io,[],{stack,S}} end;
+io(Data, _State) -> io(Data).
 
 io(Data) ->
     try {io,render_actions(nitro:actions()),Data}
