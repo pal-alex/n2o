@@ -3,7 +3,7 @@
 -compile(export_all).
 
 send(C,M) -> 
-    io:format("send pid ~p~n", [C]),
+    % io:format("sending a message to the pid ~p~n", [C]),
     C ! M.
 
 proc(init,#pi{name=Name}=Pi) -> n2o:reg(Name), {ok,Pi#pi{state=application:get_env(n2o,proto,n2o_proto)}};
@@ -34,17 +34,18 @@ handle(_, Reply) -> {error, {"Invalid Return",Reply}}.
 
 
 % send message to client
-flush(Message) -> to_client(flush, Message).
-log(Message) ->  to_client(log, Message).
+flush(Message) -> to_client({flush, Message}). % отправка текстовой команды на eval
+log(Message) ->  to_client({log, Message}). % отправка текста в консоль
 
-to_client(Type, Message) ->
-    {Pid, Ctx} = hd(ets:tab2list(web_context)),
-    to_client(Pid, Type, Message)
+
+to_client(Term) ->
+    {Pid, _Ctx} = hd(ets:tab2list(web_context)),
+    to_client(Pid, Term)
 .
-to_client(Ctx, Type, Message) when is_tuple(Ctx) ->
+to_client(Ctx, Term) when is_tuple(Ctx) ->
     Pid = n2o_cowboy2:pid(Ctx),
-    to_client(Pid, Type, Message);
+    to_client(Pid, Term);
 
-to_client(Pid, Type, Message) when is_pid(Pid) ->
-    n2o_ws:send(Pid, {Type, Message})
+to_client(Pid, Term) when is_pid(Pid) ->
+    n2o_ws:send(Pid, Term)
 .

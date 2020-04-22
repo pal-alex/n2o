@@ -69,6 +69,6 @@
 -record(ftpack,  { id=[], sid=[], filename=[], meta=[], size=[], offset=[], block=[], data=[], status=[] }).
 
 % Async Protocol
+% -record(async, { name=[], data=[], stop=false }).
 -record(async, { name=[], data=[] }).
-
 -endif.

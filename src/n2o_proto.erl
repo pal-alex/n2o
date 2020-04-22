@@ -8,9 +8,11 @@
 protocols()        -> application:get_env(n2o,protocols,[ n2o_heart ]).
 info(M,R,S)        -> push(M,R,S,protocols(),[]).
 
-nop(R,S)                  -> {reply,{binary,<<>>},R,S}.
+none(M,R,S)               -> io:format("(n2o_proto) unhandled message: ~p~n", [M]),
+                             {reply,{binary,<<>>},R,S}.
+nop(R,S)                  -> {reply,{binary,<<>>},R,S}.                        
 reply(M,R,S)              -> {reply,M,R,S}.
-push(_,R,S,[],_)          -> nop(R,S);
+push(M,R,S,[],_)          -> none(M,R,S);
 push(M,R,S,[H|T],Acc)     ->
     case H:info(M,R,S) of
          {unknown,_,_,_}  -> push(M,R,S,T,Acc);
@@ -36,6 +38,9 @@ init(_Transport, Req, _Opts, _) ->
     Zero = cx(Req),
     Ctx  = fold(init,Zero#cx.handlers,Zero),
     put(context,Ctx),
+    % n2o:reg({nitro, actions}),
+    % nitro:wire("console.log(\'n2o_proto init\');"),
+   
     Origin = case cowboy_req:header(<<"origin">>, Req, <<"*">>) of {O,_} -> O; X -> X end,
     ConfigOrigin = iolist_to_binary(application:get_env(n2o,origin,Origin)),
     Req1 = cowboy_req:set_resp_header(<<"Access-Control-Allow-Origin">>, ConfigOrigin, Ctx#cx.req),

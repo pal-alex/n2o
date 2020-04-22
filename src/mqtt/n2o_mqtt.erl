@@ -8,11 +8,11 @@ send(C,T,M) ->
 send(C,T,M,Q) ->
             emqtt:publish(C,T,M,Q).
 
-publish(Topic, Message) -> publish(Topic, Message, 2).
-publish(Topic, Message, Qos) -> 
-            {ok, ConnPid} = emqtt:start_link([{host, localhost}, {port, 1883}]),
-            {ok, _Props} = emqtt:connect(ConnPid),
-            send(ConnPid, Topic, Message, Qos).
+% publish(Topic, Message) -> publish(Topic, Message, 2).
+% publish(Topic, Message, Qos) -> 
+%             {ok, ConnPid} = emqtt:start_link([{host, localhost}, {port, 1883}]),
+%             {ok, _Props} = emqtt:connect(ConnPid),
+%             send(ConnPid, Topic, Message, Qos).
             
     
 

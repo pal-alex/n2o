@@ -15,15 +15,10 @@ ws({reply,{default,Rep},_,S})-> {reply,{binary,n2o:encode(Rep)},S};
 ws({reply,{Encoder,Rep},_,S})-> {reply,{binary,Encoder:encode(Rep)},S};
 ws(X) -> ?LOG_ERROR(#{unknown=>X}), {shutdown,[]}.
 
-pid(Ctx) when is_tuple(Ctx) -> maps:get(pid, element(4, Ctx)).
+
 
 websocket_init(S)            -> Res = {ok, Ctx} = ws(n2o_proto:init([],S,[],ws)),
-								case ets:whereis(web_context) of
-									undefined -> ets:new(web_context, [public, named_table]); % key = sid
-									_ -> skip
-								end,
-								Pid = pid(Ctx),
-								ets:insert(web_context, {Pid, Ctx}),
+								save_context(Ctx),
 								Res.
 websocket_handle(D,S)        -> 
 	% io:format("ws_handle: ~p~n state: ~p~n", [D, S]),
@@ -52,3 +47,14 @@ points() -> cowboy_router:compile([{'_', [
 					 ]}]).
 
 static() -> n2o_cowboy:fix1(code:priv_dir(application:get_env(n2o,app,review)))++"/static".
+
+
+pid(Ctx) when is_tuple(Ctx) -> maps:get(pid, element(4, Ctx)).
+save_context(Ctx) ->
+	case ets:whereis(web_context) of
+		undefined -> ets:new(web_context, [public, named_table]); % key = sid
+		_ -> skip
+	end,
+	Pid = pid(Ctx),
+	io:format("saved web context for a pid ~p~n", [Pid]),
+	ets:insert(web_context, {Pid, Ctx}).
