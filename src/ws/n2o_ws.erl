@@ -49,3 +49,10 @@ to_client(Ctx, Term) when is_tuple(Ctx) ->
 to_client(Pid, Term) when is_pid(Pid) ->
     n2o_ws:send(Pid, Term)
 .
+
+get_context() ->
+    {_Pid, Ctx} = hd(ets:tab2list(web_context)),
+    Ctx.
+put_context() ->
+    Ctx = get_context(),
+    put(context, Ctx).

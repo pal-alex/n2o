@@ -44,7 +44,8 @@ start_mqtt()     -> lists:map(fun start_mqtt/1, n2o_ring:members(mqtt)).
 start_ws()       -> lists:map(fun start_ws/1,   n2o_ring:members(ws)).
 start_tcp()      -> lists:map(fun start_tcp/1,  n2o_ring:members(tcp)).
 
-start_mqtt(Node) -> n2o_pi:start(#pi{module=n2o_mqtt,table=mqtt,   sup=n2o,state=[],name=Node}).
+start_mqtt(Node) -> io:format("start_mqtt: ~p~n", [Node]),
+                    n2o_pi:start(#pi{module=n2o_mqtt,table=mqtt,   sup=n2o,state=[],name=Node}).
 start_ws(Node)   -> io:format("start_ws: ~p~n", [Node]),
                     n2o_pi:start(#pi{module=n2o_ws,  table=ws,     sup=n2o,state=[],name=Node}).
 start_tcp(Node)  -> n2o_pi:start(#pi{module=n2o_tcp, table=tcp,    sup=n2o,state=[],name=Node}).
@@ -78,6 +79,7 @@ session(Key)        -> #cx{session=SID}=get(context), (session()):get_value(SID,
 session(Key, Value) -> #cx{session=SID}=get(context), (session()):set_value(SID, Key, Value).
 user()              -> case session(user) of undefined -> []; E -> E end.
 user(User)          -> session(user,User).
+path() -> (get(context))#cx.path.
 
 % FORMAT
 
